@@ -48,6 +48,14 @@ fn main() {
         twox_hash::xxh3::hash64_with_seed(data, seed)
     });
     
+    // FxHash (rustc-hash)
+    benchmark(processor.as_mut(), slice, "fxhash", |data: &[u8], seed: u64| -> u64 {
+        let mut fxhasher = rustc_hash::FxHasher::default();
+        fxhasher.write_u64(seed); // Better way to seed?
+        fxhasher.write(data);
+        fxhasher.finish()
+    });
+
     // AHash
     let ahash_hasher = ahash::RandomState::with_seeds(0, 0, 0, 0);
     benchmark(processor.as_mut(), slice, "ahash", |data: &[u8], _: i32| -> u64 {
