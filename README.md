@@ -101,6 +101,56 @@ Throughput is measured as the number of bytes hashed per second.
 ![x86_64](./benches/throughput/x86_64.svg)
 ![x86_64-hybrid](./benches/throughput/x86_64-hybrid.svg)
 
+### Quality
+
+<details>
+<summary>See quality benchmark results</summary>
+
+  #### GxHash
+  
+  ```
+  ✅ avalanche::<B,4>()
+  ✅ avalanche::<B,10>()
+  ✅ avalanche::<B,32>()
+  ✅ avalanche::<B,128>()
+  ✅ avalanche::<B,512>()
+  ✅ distribution_values::<B,4>(128*128)
+  ✅ distribution_values::<B,16>(128*128)
+  ✅ distribution_values::<B,128>(128*128)
+  ✅ distribution_values::<B,512>(128*128)
+  ✅ distribution_bits::<B,4>()
+  ✅ distribution_bits::<B,16>()
+  ✅ distribution_bits::<B,128>()
+  ✅ distribution_bits::<B,512>()
+  ✅ collisions_padded_zeroes::<B>(128*128)
+  ✅ collisions_flipped_bits::<B,2>(9)
+  ✅ collisions_flipped_bits::<B,3>(9)
+  ✅ collisions_flipped_bits::<B,4>(7)
+  ✅ collisions_flipped_bits::<B,5>(6)
+  ✅ collisions_flipped_bits::<B,6>(5)
+  ✅ collisions_flipped_bits::<B,7>(5)
+  ✅ collisions_flipped_bits::<B,9>(4)
+  ✅ collisions_flipped_bits::<B,20>(4)
+  ✅ collisions_flipped_bits::<B,32>(3)
+  ✅ collisions_flipped_bits::<B,64>(3)
+  ✅ collisions_flipped_bits::<B,256>(2)
+  ✅ collisions_permute::<B,u8>(4,&Vec::from_iter(0..16))
+  ✅ collisions_permute::<B,u8>(42,&Vec::from_iter(0..64))
+  ✅ collisions_permute::<B,u16>(42,&Vec::from_iter(0..64))
+  ✅ collisions_permute::<B,u32>(42,&Vec::from_iter(0..64))
+  ✅ collisions_permute::<B,u64>(42,&Vec::from_iter(0..64))
+  ✅ collisions_permute::<B,u128>(4,&Vec::from_iter(0..16))
+  ✅ collisions_permute::<B,u128>(42,&Vec::from_iter(0..64))
+  ✅ collisions_powerset_bytes::<B>(&[0,1,2,3,4,5,6,7,8,9])
+  ✅ collisions_powerset_bytes::<B>(&[0,1,2,4,8,16,32,64,128])
+  ✅ hasher_collisions_permute::<B,u8>(&[0,1,2,3,4,5,6,7,8,9])
+  ✅ hasher_collisions_permute::<B,u32>(&[0,1,2,3,4,5,6,7,8,9])
+  ✅ hasher_collisions_permute::<B,u32>(&[0,1,2,4,8,16,32,64,128,256])
+  ✅ hasher_collisions_powerset::<B,u32>(&[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19])
+  ✅ hasher_collisions_powerset::<B,u32>(&[0,1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384])
+  ```
+</details>
+
 ## Security
 
 ### DOS Resistance
