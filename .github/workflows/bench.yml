@@ -1,6 +1,8 @@
 name: Benchmark
 
 on:
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 env:
@@ -17,6 +19,9 @@ jobs:
     - name: Update rust
       run: rustup update
 
+    - name: Switch to nightly rust
+      run: rustup default nightly
+
     - name: Benchmark
       run: cargo bench --bench throughput --features bench-plot
 
@@ -31,6 +36,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Update rust
+      run: rustup update
 
     - name: Switch to nightly rust
       run: rustup default nightly
@@ -52,6 +60,9 @@ jobs:
 
     - name: Update rust
       run: rustup update
+
+    - name: Switch to nightly rust
+      run: rustup default nightly
 
     - name: Benchmark
       run: cargo bench --bench throughput --features bench-plot

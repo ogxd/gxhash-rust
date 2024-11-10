@@ -1,8 +1,8 @@
 #[cfg(not(any(all(target_feature = "aes", target_feature = "sse2"), docsrs)))] // docs.rs bypasses the target_feature check
 compile_error!{"Gxhash requires aes and sse2 intrinsics. Make sure the processor supports it and build with RUSTFLAGS=\"-C target-cpu=native\" or RUSTFLAGS=\"-C target-feature=+aes,+sse2\"."}
 
-#[cfg(all(feature = "hybrid", not(any(target_feature = "aes", target_feature = "vaes", target_feature = "avx2"))))]
-compile_error!{"Hybrid feature is only available on x86 processors with avx2 and vaes intrinsics."}
+#[cfg(all(feature = "hybrid", not(all(target_feature = "aes", target_feature = "sse2", target_feature = "avx2"))))]
+compile_error!{"Hybrid feature is only available on x86 processors with avx2 intrinsics."}
 
 #[cfg(target_arch = "x86")]
 use core::arch::x86::*;
@@ -28,22 +28,73 @@ pub unsafe fn load_unaligned(p: *const State) -> State {
     _mm_loadu_si128(p)
 }
 
-#[inline(always)]
+#[inline(never)]
 pub unsafe fn get_partial_safe(data: *const State, len: usize) -> State {
     // Temporary buffer filled with zeros
     let mut buffer = [0i8; VECTOR_SIZE];
-    // Copy data into the buffer
     core::ptr::copy(data as *const i8, buffer.as_mut_ptr(), len);
-    // Load the buffer into a __m256i vector
     let partial_vector = _mm_loadu_si128(buffer.as_ptr() as *const State);
     _mm_add_epi8(partial_vector, _mm_set1_epi8(len as i8))
+
+    // Using URBD
+    //get_partial_unsafe(data, len)
+
+    // Using simd_masked_load
+    // let indices = _mm_set_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
+    // let mask = _mm_cmpgt_epi8(_mm_set1_epi8(len as i8), indices);
+    // State::from(std::intrinsics::simd::simd_masked_load(core::simd::i8x16::from(mask), data as *const i8, core::simd::i8x16::from(_mm_set1_epi8(len as i8))))
+
+    // Using std::simd
+    // use std::simd::*;
+    // use std::mem::transmute;
+    // let slice = std::slice::from_raw_parts(data as *const i8, len);
+    // let data: Simd<i8, 16> = Simd::<i8, 16>::load_or_default(&slice);
+    // let vector: State = transmute(data);
+    // return vector;
+
+    // Using inline assembly to load out-of-bounds
+    // use std::arch::asm;
+    // let indices = _mm_set_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
+    // let mask = _mm_cmpgt_epi8(_mm_set1_epi8(len as i8), indices);
+    // let mut result: State;
+    // asm!("movdqu [{}], {}", in(reg) data, out(xmm_reg) result, options(pure, nomem, nostack));
+    // let partial_vector = _mm_and_si128(result, mask);
+    // _mm_add_epi8(partial_vector, _mm_set1_epi8(len as i8))
+}
+
+#[inline(always)]
+pub unsafe fn get_partial_unsafe_no_ub(data: *const State, len: usize) -> State {
+    // Using inline assembly to load out-of-bounds
+    use std::arch::asm;
+    let indices = _mm_set_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
+    let mask = _mm_cmpgt_epi8(_mm_set1_epi8(len as i8), indices);
+    let mut result: State;
+    asm!("movdqu {0}, [{1}]", out(xmm_reg) result, in(reg) data, options(pure, nomem, nostack));
+    let partial_vector = _mm_and_si128(result, mask);
+    _mm_add_epi8(partial_vector, _mm_set1_epi8(len as i8))
+
+    // Using simd_masked_load
+    // let indices = _mm_set_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
+    // let mask = _mm_cmpgt_epi8(_mm_set1_epi8(len as i8), indices);
+    // State::from(std::intrinsics::simd::simd_masked_load(core::simd::i8x16::from(mask), data as *const i8, core::simd::i8x16::from(_mm_set1_epi8(len as i8))))
+
+    // Using std::simd
+    // use std::simd::*;
+    // use std::mem::transmute;
+    // let slice = std::slice::from_raw_parts(data as *const i8, len);
+    // let data: Simd<i8, 16> = Simd::<i8, 16>::load_or_default(&slice);
+    // let vector: State = transmute(data);
+    // return vector;
+
+    //return get_partial_safe(data, len);
 }
 
 #[inline(always)]
 pub unsafe fn get_partial_unsafe(data: *const State, len: usize) -> State {
     let indices = _mm_set_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
     let mask = _mm_cmpgt_epi8(_mm_set1_epi8(len as i8), indices);
-    let partial_vector = _mm_and_si128(_mm_loadu_si128(data), mask);
+    let d: __m128i = _mm_loadu_si128(data);
+    let partial_vector = _mm_and_si128(d, mask);
     _mm_add_epi8(partial_vector, _mm_set1_epi8(len as i8))
 }
 
